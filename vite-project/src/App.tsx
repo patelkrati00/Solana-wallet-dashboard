@@ -1,8 +1,13 @@
-import { Keypair } from "@solana/web3.js"
+import { Keypair, Connection, clusterApiUrl, PublicKey, } from "@solana/web3.js"
 function App() {
-  const createWallet = (): void => {
+  const createWallet = async (): Promise<void> => {
     const kp = Keypair.generate();
+    const connection = new Connection(clusterApiUrl("devnet"))
+    const address = new PublicKey("3pGveX9dpw1pbip3vyBMDCHJEqoV3p7DUnYx9xDcMAdv")
+    const balance = await connection.getBalance(address);
+
     console.log(`keypair is ${kp.publicKey.toString()}`);
+    console.log(`${balance/1e9} sol`);
 
   }
 
