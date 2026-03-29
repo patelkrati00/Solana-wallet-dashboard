@@ -2,15 +2,18 @@ import { WalletMultiButton } from "@solana/wallet-adapter-react-ui"
 import { useConnection, useWallet } from "@solana/wallet-adapter-react"
 import { useEffect, useState } from "react";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { Transaction, PublicKey, SystemProgram } from "@solana/web3.js";
 
 function App() {
-  const { publicKey } = useWallet();
+  const { publicKey, sendTransaction } = useWallet();
   const { connection } = useConnection();
   const [balance, setBalance] = useState<number | null>(null);
   const [tokens, setTokens] = useState<Token[]>([]);
+  const [receiver, setReceiver] = useState("");
+  const [amount, setAmount] = useState("");
 
   type Token = {
-    mint: String,
+    mint: string,
     amount: number,
   }
 
@@ -48,6 +51,28 @@ function App() {
     getData();
   }, [publicKey, connection])
 
+  const sendSol = async () => {
+    if (!publicKey) {
+      alert("Please connect your wallet first");
+      return;
+    }
+
+    const transaction = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: publicKey,
+        toPubkey: new PublicKey(receiver),
+        lamports: Number(amount) * 1e9,
+      })
+    );
+
+    const signature = await sendTransaction(transaction, connection);
+
+    console.log("transaction Signature", signature);
+    alert("Transaction sent!");
+    setAmount("");
+    setReceiver("");
+  }
+
   return (
     <div style={{ fontFamily: "Arial", padding: "20px", maxWidth: "600px", margin: "auto" }}>
       <h1>💼 Solana Wallet Dashboard</h1>
@@ -83,6 +108,28 @@ function App() {
           <p><strong>Amount:</strong> {t.amount}</p>
         </div>
       ))}
+
+      <h2>💸 Send SOL</h2>
+
+      <input
+        type="text"
+        placeholder="Receiver Address"
+        value={receiver}
+        onChange={(e) => setReceiver(e.target.value)}
+        style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
+      />
+
+      <input
+        type="number"
+        placeholder="Amount (SOL)"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value)}
+        style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
+      />
+
+      <button style={{ padding: "10px", width: "100%" }} onClick={sendSol}>
+        Send SOL
+      </button>
     </div>
   );
 
